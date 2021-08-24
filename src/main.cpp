@@ -50,6 +50,9 @@ void setup()
   Serial.println("Found MCP9808!");
 
   tempsensor.setResolution(3);
+
+  // temp
+  randomSeed(analogRead(A0));
 }
 
 void updateValues(float temp, float humidity, int co2)
@@ -71,10 +74,10 @@ void updateValues(float temp, float humidity, int co2)
   tft.setTextDatum(BC_DATUM);
   char buf[10];
   sprintf(buf, "%2.1f C", temp);
-  tft.drawString(buf, mid_x/2, 135, 4);
+  tft.drawString(buf, mid_x / 2, 135, 4);
   memset(buf, 0, sizeof(buf));
   sprintf(buf, "%2.0f %%", humidity);
-  tft.drawString(buf, mid_x*3/2, 135, 4);
+  tft.drawString(buf, mid_x * 3 / 2, 135, 4);
 }
 
 void loop()
@@ -89,7 +92,7 @@ void loop()
   Serial.print("Temp: ");
   Serial.print(temp, 4);
   Serial.println("*C");
-  updateValues(temp, 42.0, 250);
+  updateValues(temp, random(100), random(10000));
 
   delay(2000);
   Serial.println("Shutdown MCP9808.... ");
