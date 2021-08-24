@@ -19,10 +19,14 @@
 #include <Wire.h>
 #include "Adafruit_MCP9808.h"
 
-TFT_eSPI tft = TFT_eSPI(135, 240);
-Adafruit_MCP9808 tempsensor = Adafruit_MCP9808();
+const int32_t SCREEN_WIDTH = 240;
+const int32_t SCREEN_HEIGHT = 135;
 const int32_t mid_x = 120;
 const int32_t mid_y = 67;
+TFT_eSPI tft = TFT_eSPI(SCREEN_HEIGHT, SCREEN_WIDTH);
+TFT_eSprite spr = TFT_eSprite(&tft);
+Adafruit_MCP9808 tempsensor = Adafruit_MCP9808();
+
 
 void setup()
 {
@@ -30,6 +34,9 @@ void setup()
 
   tft.init();
   tft.setRotation(1);
+  spr.setColorDepth(16);
+  spr.createSprite(SCREEN_WIDTH, SCREEN_HEIGHT);
+  spr.fillSprite(TFT_BLACK);
 
   if (TFT_BL > 0)
   {                                         // TFT_BL has been set in the TFT_eSPI library in the User Setup file TTGO_T_Display.h
@@ -59,25 +66,28 @@ void updateValues(float temp, float humidity, int co2)
 {
   tft.fillScreen(TFT_BLACK);
 
-  tft.setTextColor(TFT_WHITE, TFT_BLACK);
-  tft.setTextDatum(BC_DATUM);
   int co2Font = 8;
   if (co2 > 9999)
   {
     co2Font = 7;
   }
-  tft.drawNumber(co2, mid_x, mid_y + 10, co2Font);
-  tft.setTextDatum(TC_DATUM);
-  tft.drawString("ppm CO2", mid_x, mid_y + 10, 2);
+  spr.fillSprite(TFT_BLACK);
+  spr.setTextColor(TFT_WHITE, TFT_BLACK);
+  spr.setTextDatum(BC_DATUM);
+  spr.drawNumber(co2, mid_x, mid_y + 10, co2Font);
+  spr.setTextDatum(TC_DATUM);
+  spr.drawString("ppm CO2", mid_x, mid_y + 10, 2);
 
-  tft.setTextColor(TFT_LIGHTGREY, TFT_BLACK);
-  tft.setTextDatum(BC_DATUM);
+  spr.setTextColor(TFT_LIGHTGREY, TFT_BLACK);
+  spr.setTextDatum(BC_DATUM);
   char buf[10];
   sprintf(buf, "%2.1f C", temp);
-  tft.drawString(buf, mid_x / 2, 135, 4);
+  spr.drawString(buf, mid_x / 2, 135, 4);
   memset(buf, 0, sizeof(buf));
   sprintf(buf, "%2.0f %%", humidity);
-  tft.drawString(buf, mid_x * 3 / 2, 135, 4);
+  spr.drawString(buf, mid_x * 3 / 2, 135, 4);
+
+  spr.pushSprite(0, 0);
 }
 
 void loop()
