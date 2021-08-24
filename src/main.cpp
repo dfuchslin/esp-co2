@@ -27,7 +27,6 @@ TFT_eSPI tft = TFT_eSPI(SCREEN_HEIGHT, SCREEN_WIDTH);
 TFT_eSprite spr = TFT_eSprite(&tft);
 Adafruit_MCP9808 tempsensor = Adafruit_MCP9808();
 
-
 void setup()
 {
   Serial.begin(115200);
@@ -66,13 +65,22 @@ void updateValues(float temp, float humidity, int co2)
 {
   tft.fillScreen(TFT_BLACK);
 
-  int co2Font = 8;
+  uint8_t co2Font = 8;
   if (co2 > 9999)
   {
     co2Font = 7;
   }
+  uint16_t co2Color = TFT_DARKGREEN;
+  if (co2 > 800)
+  {
+    co2Color = TFT_ORANGE;
+  }
+  if (co2 > 2000)
+  {
+    co2Color = TFT_RED;
+  }
   spr.fillSprite(TFT_BLACK);
-  spr.setTextColor(TFT_WHITE, TFT_BLACK);
+  spr.setTextColor(co2Color, TFT_BLACK);
   spr.setTextDatum(BC_DATUM);
   spr.drawNumber(co2, mid_x, mid_y + 10, co2Font);
   spr.setTextDatum(TC_DATUM);
