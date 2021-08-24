@@ -1,17 +1,3 @@
-/***************************************************
-* Liquid Level Sensor-FS-IR02
-* ****************************************************
-* This example is to get liquid level
-
-* @author jackli(Jack.li@dfrobot.com)
-* @version  V1.0
-* @date  2016-1-30
-
-* GNU Lesser General Public License.
-* See <http://www.gnu.org/licenses/> for details.
-* All above must be included in any redistribution
-* ****************************************************/
-
 #include <Arduino.h>
 #include <TFT_eSPI.h>
 #include <SPI.h>
