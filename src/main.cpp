@@ -13,6 +13,14 @@ TFT_eSPI tft = TFT_eSPI(SCREEN_HEIGHT, SCREEN_WIDTH);
 TFT_eSprite spr = TFT_eSprite(&tft);
 Adafruit_MCP9808 tempsensor = Adafruit_MCP9808();
 
+void showError(String error)
+{
+  tft.fillScreen(TFT_BLACK);
+  tft.setTextColor(TFT_RED, TFT_BLACK);
+  tft.setTextDatum(MC_DATUM);
+  tft.drawString(error, mid_x, mid_y, 4);
+}
+
 void setup()
 {
   Serial.begin(115200);
@@ -35,6 +43,7 @@ void setup()
   if (!tempsensor.begin(0x18))
   {
     Serial.println("Couldn't find MCP9808! Check your connections and verify the address is correct.");
+    showError("No sensor!");
     while (1)
       ;
   }
