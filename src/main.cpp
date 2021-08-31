@@ -3,7 +3,7 @@
 #include <SPI.h>
 
 #include <Wire.h>
-#include "Adafruit_MCP9808.h"
+#include <Adafruit_SCD30.h>
 
 const int32_t SCREEN_WIDTH = 240;
 const int32_t SCREEN_HEIGHT = 135;
@@ -11,7 +11,7 @@ const int32_t mid_x = 120;
 const int32_t mid_y = 67;
 TFT_eSPI tft = TFT_eSPI(SCREEN_HEIGHT, SCREEN_WIDTH);
 TFT_eSprite spr = TFT_eSprite(&tft);
-Adafruit_MCP9808 tempsensor = Adafruit_MCP9808();
+Adafruit_SCD30 scd30;
 
 void showError(String error)
 {
@@ -26,7 +26,7 @@ void setup()
   Serial.begin(115200);
 
   tft.init();
-  tft.setRotation(1);
+  tft.setRotation(3);
   spr.setColorDepth(16);
   spr.createSprite(SCREEN_WIDTH, SCREEN_HEIGHT);
   spr.fillSprite(TFT_BLACK);
@@ -40,7 +40,7 @@ void setup()
   tft.fillScreen(TFT_BLACK);
 
   Wire.begin(21, 22);
-  if (!tempsensor.begin(0x18))
+  if (!scd30.begin())
   {
     Serial.println("Couldn't find MCP9808! Check your connections and verify the address is correct.");
     showError("No sensor!");
@@ -50,15 +50,25 @@ void setup()
 
   Serial.println("Found MCP9808!");
 
-  tempsensor.setResolution(3);
-
-  // temp
-  randomSeed(analogRead(A0));
+  Serial.print("Measurement Interval: ");
+  Serial.print(scd30.getMeasurementInterval());
+  Serial.println(" seconds");
 }
 
 void updateValues(float temp, float humidity, int co2)
 {
   tft.fillScreen(TFT_BLACK);
+
+  /*
+
+
+    < 1000 = Good air. Your body will be happy!
+    1000 - 2000 = Poor air. See if there is any way to improve.
+    2000 - 5000 =  Warning levels. Good idea to investigate why.
+    > 5000 = Dang, you are above the OSHA Permissible Exposure Limit for 8 hour exposure. Something should be done.
+
+
+  */
 
   uint8_t co2Font = 8;
   if (co2 > 9999)
@@ -66,7 +76,8 @@ void updateValues(float temp, float humidity, int co2)
     co2Font = 7;
   }
   uint16_t co2Color = TFT_DARKGREEN;
-  if (co2 > 800)
+  uint16_t co2ColorBackground = TFT_BLACK;
+  if (co2 > 1000)
   {
     co2Color = TFT_ORANGE;
   }
@@ -74,14 +85,19 @@ void updateValues(float temp, float humidity, int co2)
   {
     co2Color = TFT_RED;
   }
-  spr.fillSprite(TFT_BLACK);
-  spr.setTextColor(co2Color, TFT_BLACK);
+  if (co2 > 5000)
+  {
+    co2Color = TFT_WHITE;
+    co2ColorBackground = TFT_RED;
+  }
+  spr.fillSprite(co2ColorBackground);
+  spr.setTextColor(co2Color);
   spr.setTextDatum(BC_DATUM);
   spr.drawNumber(co2, mid_x, mid_y + 10, co2Font);
   spr.setTextDatum(TC_DATUM);
   spr.drawString("ppm CO2", mid_x, mid_y + 10, 2);
 
-  spr.setTextColor(TFT_LIGHTGREY, TFT_BLACK);
+  spr.setTextColor(TFT_LIGHTGREY);
   spr.setTextDatum(BC_DATUM);
   char buf[10];
   sprintf(buf, "%2.1f C", temp);
@@ -95,21 +111,14 @@ void updateValues(float temp, float humidity, int co2)
 
 void loop()
 {
-  Serial.println("wake up MCP9808.... "); // wake up MCP9808 - power consumption ~200 mikro Ampere
-  tempsensor.wake();                      // wake up, ready to read!
-
-  // Read and print out the temperature, also shows the resolution mode used for reading.
-  Serial.print("Resolution in mode: ");
-  Serial.println(tempsensor.getResolution());
-  float temp = tempsensor.readTempC();
-  Serial.print("Temp: ");
-  Serial.print(temp, 4);
-  Serial.println("*C");
-  updateValues(temp, random(100), random(10000));
-
-  delay(2000);
-  Serial.println("Shutdown MCP9808.... ");
-  tempsensor.shutdown_wake(1); // shutdown MSP9808 - power consumption ~0.1 mikro Ampere, stops temperature sampling
-  Serial.println("");
-  delay(200);
+  if (scd30.dataReady())
+  {
+    if (!scd30.read())
+    {
+      Serial.println("Error reading sensor data");
+      return;
+    }
+    updateValues(scd30.temperature, scd30.relative_humidity, scd30.CO2);
+  }
+  delay(1000);
 }

@@ -7,3 +7,9 @@ https://github.com/Xinyuan-LilyGO/TTGO-T-Display
 Libraries:
 https://github.com/Bodmer/TFT_eSPI
 https://github.com/sparkfun/SparkFun_SCD30_Arduino_Library
+
+# scd30 sensor
+Black - gnd
+red - 3v3
+yellow - scl
+blue - sca
